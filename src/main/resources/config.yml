@@ -1,0 +1,48 @@
+settings:
+  min-players: 2
+  max-players: 16
+  countdown-time: 30
+  game-time: 3600
+
+teams:
+  red:
+    name: "Red"
+    color: "RED"
+    witch-location: "world,0,64,0"
+    spawn-point: "world,5,64,5"
+    generator-location: "world,10,64,10"
+  blue:
+    name: "Blue"
+    color: "BLUE"
+    witch-location: "world,0,64,100"
+    spawn-point: "world,5,64,105"
+    generator-location: "world,10,64,110"
+
+generators:
+  iron:
+    material: "IRON_INGOT"
+    spawn-rate: 2
+    amount: 1
+  gold:
+    material: "GOLD_INGOT"
+    spawn-rate: 5
+    amount: 1
+  emerald:
+    material: "EMERALD"
+    spawn-rate: 15
+    amount: 1
+
+shop:
+  categories:
+    blocks:
+      wool:
+        material: "WHITE_WOOL"
+        price-type: "IRON_INGOT"
+        price: 4
+        amount: 16
+    weapons:
+      sword:
+        material: "IRON_SWORD"
+        price-type: "GOLD_INGOT"
+        price: 7
+        amount: 1

@@ -28,14 +28,12 @@ public abstract class PowerUp {
         this.location = location;
         this.active = true;
 
-        // Create floating display
         display = location.getWorld().spawn(location, ArmorStand.class);
         display.setVisible(false);
         display.setGravity(false);
         display.setSmall(true);
         display.setHelmet(new ItemStack(displayMaterial));
 
-        // Start animation
         startFloatingAnimation();
     }
 
@@ -50,7 +48,6 @@ public abstract class PowerUp {
             Location newLoc = location.clone().add(0, y, 0);
             display.teleport(newLoc);
 
-            // Spawn particles
             location.getWorld().spawnParticle(
                 Particle.SPELL_WITCH,
                 location.clone().add(0, 1, 0),
@@ -87,10 +84,8 @@ public abstract class PowerUp {
         }
     }
 
-    // Abstract method to be implemented by specific power-ups
     public abstract void apply(Player player);
 
-    // Getters
     public String getName() { return name; }
     public int getDuration() { return duration; }
     public boolean isActive() { return active; }

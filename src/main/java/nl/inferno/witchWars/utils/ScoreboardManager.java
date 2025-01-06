@@ -1,5 +1,6 @@
 package nl.inferno.witchWars.utils;
 
+import nl.inferno.witchWars.game.Arena;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;

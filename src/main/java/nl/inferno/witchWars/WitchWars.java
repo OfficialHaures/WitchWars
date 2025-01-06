@@ -7,6 +7,7 @@ import nl.inferno.witchWars.listeners.*;
 import nl.inferno.witchWars.powerups.PowerUpManager;
 import nl.inferno.witchWars.shop.ShopManager;
 import nl.inferno.witchWars.stats.StatsManager;
+import nl.inferno.witchWars.utils.ScoreboardManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class WitchWars extends JavaPlugin {
@@ -17,6 +18,7 @@ public final class WitchWars extends JavaPlugin {
     private GeneratorManager generatorManager;
     private StatsManager statsManager;
     private PowerUpManager powerUpManager;
+    private ScoreboardManager scoreboardManager;
 
     @Override
     public void onEnable() {
@@ -32,15 +34,18 @@ public final class WitchWars extends JavaPlugin {
         this.generatorManager = new GeneratorManager();
         this.statsManager = new StatsManager();
         this.powerUpManager = new PowerUpManager();
+        this.scoreboardManager = new ScoreboardManager();
 
         // Register commands
-        getCommand("witchwars").setExecutor(new MainCommand(instance));
+        getCommand("witchwars").setExecutor(new MainCommand(this));
+        getCommand("witchwarsadmin").setExecutor(new MainCommand(this));
 
         // Register events
         getServer().getPluginManager().registerEvents(new GameListeners(this), this);
-        getServer().getPluginManager().registerEvents(new ShopListeners(instance), this);
+        getServer().getPluginManager().registerEvents(new ShopListeners(this), this);
         getServer().getPluginManager().registerEvents(new TeamListeners(this), this);
         getServer().getPluginManager().registerEvents(new PowerUpListeners(this), this);
+        getServer().getPluginManager().registerEvents(new GeneratorListeners(this), this);
 
         getLogger().info("WitchWars enabled successfully!");
     }
@@ -65,4 +70,5 @@ public final class WitchWars extends JavaPlugin {
     public GeneratorManager getGeneratorManager() { return generatorManager; }
     public StatsManager getStatsManager() { return statsManager; }
     public PowerUpManager getPowerUpManager() { return powerUpManager; }
+    public ScoreboardManager getScoreboardManager() { return scoreboardManager; }
 }

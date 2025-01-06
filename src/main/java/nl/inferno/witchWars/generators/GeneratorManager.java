@@ -1,9 +1,9 @@
 package nl.inferno.witchWars.generators;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import nl.inferno.witchWars.WitchWars;
+import nl.inferno.witchWars.game.Generator;
+import nl.inferno.witchWars.game.GeneratorTier;
+import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
@@ -22,13 +22,18 @@ public class GeneratorManager {
     }
 
     private void setupDefaultGenerators() {
-        addGeneratorType(Material.IRON_INGOT, 2, Tier.TIER1);
-        addGeneratorType(Material.GOLD_INGOT, 5, Tier.TIER2);
-        addGeneratorType(Material.EMERALD, 20, Tier.TIER3);
-        addGeneratorType(Material.DIAMOND, 30, Tier.TIER4);
+        addGeneratorType(Material.IRON_INGOT, 2, GeneratorTier.TIER1);
+        addGeneratorType(Material.GOLD_INGOT, 5, GeneratorTier.TIER2);
+        addGeneratorType(Material.EMERALD, 20, GeneratorTier.TIER3);
+        addGeneratorType(Material.DIAMOND, 30, GeneratorTier.TIER4);
     }
 
-    public void createGenerator(Location location, Material material, Tier tier) {
+    private void addGeneratorType(Material material, int spawnRate, GeneratorTier generatorTier) {
+        Generator generator = new Generator(null, material, generatorTier);
+        generators.put(generator.getLocation(), generator);
+    }
+
+    public void createGenerator(Location location, Material material, GeneratorTier tier) {
         Generator generator = new Generator(location, material, tier);
         generators.put(location, generator);
     }
@@ -81,5 +86,14 @@ public class GeneratorManager {
 
     public Map<Location, Generator> getGenerators() {
         return generators;
+    }
+
+    public void startGenerators(String name) {
+        for(Generator generator : generators.values()){
+            if(generator.getLocation().getWorld().getName().equals(name)){
+                generator.setEnabled(true);
+                generator.start();
+            }
+        }
     }
 }

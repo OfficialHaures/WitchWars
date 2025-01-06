@@ -2,6 +2,8 @@ package nl.inferno.witchWars.managers;
 
 import nl.inferno.witchWars.game.Team;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -19,5 +21,14 @@ public class TeamManager {
             playerTeams.put(player, team);
             team.addPlayer(player);
         }
+    }
+
+    public Team getPlayerTeam(Player player) {
+        for(Team team: teams){
+            if(team.getPlayers().contains(player.getUniqueId())){
+                return team;
+            }
+        }
+        return null;
     }
 }

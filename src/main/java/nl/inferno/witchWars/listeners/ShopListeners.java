@@ -1,5 +1,7 @@
 package nl.inferno.witchWars.listeners;
 
+import nl.inferno.witchWars.WitchWars;
+import nl.inferno.witchWars.shop.ShopManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;

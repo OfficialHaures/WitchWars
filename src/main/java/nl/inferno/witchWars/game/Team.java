@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Witch;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -78,6 +79,37 @@ public class Team {
             }
         }
     }
+
+
+
+    public void removePlayer(@NotNull UUID uniqueId) {
+        players.remove(uniqueId);
+
+        if(players.isEmpty()){
+            alive = false;
+            if(teamWitch != null){
+                teamWitch.remove();
+            }
+        }
+    }
+
+    public void reset() {
+        players.clear();
+        alive = true;
+
+        if(teamWitch != null){
+            teamWitch.remove();
+            teamWitch = null;
+        }
+
+        level = 1;
+        witchHealth = 100.0;
+    }
+
+    public @NotNull Location getSpawnPoint() {
+        return spawnPoint.clone();
+    }
+
 
     // Getters and setters
     public String getName() { return name; }

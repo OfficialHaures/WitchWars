@@ -9,6 +9,8 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -171,5 +173,9 @@ public class GameManager {
                           loc.getPitch();
         plugin.getConfig().set(path, locString);
         plugin.saveConfig();
+    }
+
+    public Collection<Arena> getArenas() {
+        return arenas.values();
     }
 }

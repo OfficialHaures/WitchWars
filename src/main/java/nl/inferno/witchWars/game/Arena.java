@@ -46,12 +46,14 @@ public class Arena {
         if (plugin.getConfig().contains("arenas." + name + ".teams")) {
             for (String teamName : plugin.getConfig().getConfigurationSection("arenas." + name + ".teams").getKeys(false)) {
                 String colorStr = plugin.getConfig().getString("arenas." + name + ".teams." + teamName + ".color");
-                ChatColor color = ChatColor.valueOf(colorStr);
-                String spawnPointStr = plugin.getConfig().getString("arenas." + name + ".teams." + teamName + ".spawnpoint");
-                String witchSpawnStr = plugin.getConfig().getString("arenas." + name + ".teams." + teamName + ".witchspawn");
-                Location spawnPoint = parseLocation(spawnPointStr);
-                Location witchSpawn = parseLocation(witchSpawnStr);
-                teams.add(new Team(teamName, color));
+                if (colorStr != null) {
+                    try {
+                        ChatColor color = ChatColor.valueOf(colorStr.toUpperCase());
+                        teams.add(new Team(teamName, color));
+                    } catch (IllegalArgumentException e) {
+                        plugin.getLogger().warning("Invalid color for team " + teamName + " in arena " + name);
+                    }
+                }
             }
         }
     }
@@ -208,7 +210,6 @@ public class Arena {
         int teamsAlive = 0;
         Team winningTeam = null;
 
-        // Count alive teams and find potential winner
         for (Team team : teams) {
             if (team.isAlive()) {
                 teamsAlive++;
@@ -216,17 +217,14 @@ public class Arena {
             }
         }
 
-        // Handle win condition
         if (teamsAlive == 1 && winningTeam != null) {
             gameState = GameState.ENDING;
 
-            // Announce winner
             broadcast(ChatColor.GOLD + "=========================");
             broadcast(ChatColor.WHITE + "Team " + winningTeam.getColor() + winningTeam.getName() +
                     ChatColor.WHITE + " has won the game!");
             broadcast(ChatColor.GOLD + "=========================");
 
-            // Award winning team
             for (UUID playerId : winningTeam.getPlayers()) {
                 Player player = Bukkit.getPlayer(playerId);
                 if (player != null) {
@@ -235,10 +233,8 @@ public class Arena {
                 }
             }
 
-            // Schedule reset
             Bukkit.getScheduler().runTaskLater(plugin, this::resetGame, 200L);
         }
-        // Handle draw condition
         else if (teamsAlive == 0) {
             broadcast(ChatColor.RED + "Game ended in a draw!");
             resetGame();
@@ -268,11 +264,18 @@ public class Arena {
     }
 
     public Team getTeam(String teamName) {
+        for(Team team : teams){
+            if(team.getName().equalsIgnoreCase(teamName)){
+                return team;
+            }
+        }
         return null;
     }
 
-    public void setLobbySpawn(Location loc) {
 
+    public void setLobbySpawn(Location loc) {
+        this.lobbySpawn = loc.clone();
     }
+
 }
 

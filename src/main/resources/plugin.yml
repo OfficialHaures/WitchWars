@@ -2,3 +2,6 @@ name: WitchWars
 version: '1.0'
 main: nl.inferno.witchWars.WitchWars
 api-version: '1.19'
+commands:
+  witchwars:
+    description: 'Opens the WitchWars menu'

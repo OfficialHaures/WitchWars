@@ -38,6 +38,7 @@ public final class WitchWars extends JavaPlugin {
 
         // Register commands
         getCommand("witchwars").setExecutor(new MainCommand(this));
+        getCommand("witchwars").setTabCompleter(new WitchWarsTabCompleter(this));
 
 
         // Register events
@@ -52,11 +53,15 @@ public final class WitchWars extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Save all data
-        statsManager.saveAllData();
-        gameManager.stopAllGames();
+        if(statsManager != null){
+            statsManager.saveAllData();
+        }
+        if(gameManager != null){
+            gameManager.stopAllGames();
+        }
 
         getLogger().info("WitchWars disabled successfully!");
+
     }
 
     public static WitchWars getInstance() {

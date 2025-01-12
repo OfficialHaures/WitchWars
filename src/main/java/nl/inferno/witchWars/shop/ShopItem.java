@@ -3,56 +3,58 @@ package nl.inferno.witchWars.shop;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShopItem {
     private final String name;
-    private final Material material;
+    private final Material item;
     private final int cost;
-    private final Material costType;
+    private final Material currency;
     private final int amount;
-    private final List<String> description;
-    private final int slot;
 
-    public ShopItem(String name, Material material, int cost, Material costType, int amount, int slot) {
+    public ShopItem(String name, Material item, int cost, Material currency, int amount) {
         this.name = name;
-        this.material = material;
+        this.item = item;
         this.cost = cost;
-        this.costType = costType;
+        this.currency = currency;
         this.amount = amount;
-        this.slot = slot;
-        this.description = new ArrayList<>();
+    }
+
+    public ShopItem(String name, Material item, int cost, Material currency) {
+        this(name, item, cost, currency, 1);
     }
 
     public ItemStack createDisplayItem() {
-        ItemStack item = new ItemStack(material, amount);
-        ItemMeta meta = item.getItemMeta();
+        ItemStack displayItem = new ItemStack(item, amount);
+        ItemMeta meta = displayItem.getItemMeta();
 
-        if (meta != null) {
-            meta.setDisplayName("§6" + name);
+        meta.setDisplayName("§6" + name);
+        List<String> lore = new ArrayList<>();
+        lore.add("§7Cost: §f" + cost + " " + currency.name());
+        lore.add("");
+        lore.add("§eClick to purchase!");
 
-            List<String> lore = new ArrayList<>();
-            lore.add("§7Cost: §f" + cost + " " + costType.name());
-            lore.addAll(description);
+        meta.setLore(lore);
+        displayItem.setItemMeta(meta);
 
-            meta.setLore(lore);
-            item.setItemMeta(meta);
-        }
-
-        return item;
-    }
-
-    public void addDescription(String line) {
-        description.add("§7" + line);
+        return displayItem;
     }
 
     // Getters
     public String getName() { return name; }
-    public Material getMaterial() { return material; }
+    public Material getMaterial() { return item; }
     public int getCost() { return cost; }
-    public Material getCostType() { return costType; }
+    public Material getCostType() { return currency; }
     public int getAmount() { return amount; }
-    public List<String> getDescription() { return description; }
-    public int getSlot() { return slot; }
+
+    public Material getCurrency() {
+        return currency;
+    }
+
+    public @NotNull Material getItem() {
+        return item;
+    }
 }

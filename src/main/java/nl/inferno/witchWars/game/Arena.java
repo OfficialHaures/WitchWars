@@ -78,13 +78,21 @@ public class Arena {
     }
 
     private void distributePlayersToTeams() {
-        List<UUID> playersList = new ArrayList<>(players);
-        Collections.shuffle(playersList);
+        List<Team> availableTeams = new ArrayList<>(teams);
+        List<UUID> unassignedPlayers = new ArrayList<>(players);
 
-        int teamIndex = 0;
-        for (UUID playerId : playersList) {
-            teams.get(teamIndex).addPlayer(playerId);
-            teamIndex = (teamIndex + 1) % teams.size();
+        while (!unassignedPlayers.isEmpty() && !availableTeams.isEmpty()) {
+            Team team = availableTeams.get(0);
+            UUID playerId = unassignedPlayers.remove(0);
+            Player player = Bukkit.getPlayer(playerId);
+
+            if (player != null && team.getSpawnPoint() != null) {
+                team.addPlayer(player);
+            }
+
+            if (team.isFull()) {
+                availableTeams.remove(0);
+            }
         }
     }
 
@@ -177,7 +185,7 @@ public class Arena {
         return players.size() >= getMinPlayers() && gameState == GameState.WAITING;
     }
 
-    private int getMinPlayers() {
+    public int getMinPlayers() {
         return plugin.getConfig().getInt("arenas." + name + ".minPlayers", 2);
     }
 
@@ -242,7 +250,7 @@ public class Arena {
         }
 
     }
-    private void broadcast(String message) {
+    public void broadcast(String message) {
         for (UUID playerId : players) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
@@ -277,5 +285,8 @@ public class Arena {
         this.lobbySpawn = loc.clone();
     }
 
+    public Object getLobbySpawn() {
+        return lobbySpawn != null ? lobbySpawn.clone() : null;
+    }
 }
 

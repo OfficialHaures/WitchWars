@@ -22,6 +22,7 @@ public class Team {
     private Location spawnPoint;
     private Location witchSpawnPoint;
     private boolean alive;
+    private int maxPlayers;
     private int level;
     private double witchHealth;
     private @NotNull Location witchSpawn;
@@ -35,14 +36,13 @@ public class Team {
         this.alive = true;
         this.level = 1;
         this.witchHealth = 100.0;
+        this.maxPlayers = 16;
     }
 
-    public void addPlayer(UUID player) {
-        players.add(player);
-        Player p = Bukkit.getPlayer(player);
-        if (p != null) {
-            p.teleport(spawnPoint);
-            p.sendMessage(color + "You joined team " + name);
+    public void addPlayer(Player player) {
+        if(spawnPoint != null){
+            players.add(player.getUniqueId());
+            player.teleport(spawnPoint.clone());
         }
     }
 
@@ -113,8 +113,13 @@ public class Team {
     public void setSpawnPoint(Location loc) {
         this.spawnPoint = loc.clone();
     }
-    public void setWitchSpawn(Location loc) {
+    public Location setWitchSpawn(Location loc) {
+
+        if(witchSpawn == null){
+            return spawnPoint;
+        }
         this.witchSpawn = loc.clone();
+        return loc;
     }
 
     // Getters and setters
@@ -126,5 +131,11 @@ public class Team {
     public Witch getWitch() { return teamWitch; }
 
 
+    public Location getWitchSpawn() {
+        return witchSpawn != null ? witchSpawn.clone() : spawnPoint.clone();
+    }
 
+    public boolean isFull() {
+        return players.size() >= maxPlayers;
+    }
 }

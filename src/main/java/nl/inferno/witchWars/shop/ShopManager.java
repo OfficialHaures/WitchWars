@@ -1,91 +1,124 @@
 package nl.inferno.witchWars.shop;
 
-import org.bukkit.Material;
+import nl.inferno.witchWars.game.Team;
+import nl.inferno.witchWars.shop.ShopItem;
+import org.bukkit.*;
+import org.bukkit.entity.Piglin;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class ShopManager {
-    private final Map<String, ShopCategory> categories;
-    private final Map<Material, Integer> prices;
+    private final Map<UUID, Shop> shopKeepers = new HashMap<>();
+    private final Map<String, ShopItem> items = new HashMap<>();
 
     public ShopManager() {
-        this.categories = new HashMap<>();
-        this.prices = new HashMap<>();
-        setupDefaultShop();
+        registerShopItems();
     }
 
-    private void setupDefaultShop() {
-        // Combat Category
-        ShopCategory combat = new ShopCategory("Combat", 0, new ItemStack(Material.IRON_SWORD));
-        combat.addItem(new ShopItem("Iron Sword", Material.IRON_SWORD, 10, Material.IRON_INGOT, 1, 0));
-        combat.addItem(new ShopItem("Diamond Sword", Material.DIAMOND_SWORD, 5, Material.EMERALD, 1, 1));
-        categories.put("combat", combat);
+    private void registerShopItems() {
+        // Weapons
+        addShopItem(new ShopItem("Iron Sword", Material.IRON_SWORD, 8, Material.IRON_INGOT));
+        addShopItem(new ShopItem("Diamond Sword", Material.DIAMOND_SWORD, 4, Material.DIAMOND));
 
-        // Blocks Category
-        ShopCategory blocks = new ShopCategory("Blocks", 1, new ItemStack(Material.WHITE_WOOL));
-        blocks.addItem(new ShopItem("Wool", Material.WHITE_WOOL, 4, Material.IRON_INGOT, 16, 0));
-        blocks.addItem(new ShopItem("Wood", Material.OAK_PLANKS, 4, Material.GOLD_INGOT, 16, 0));
-        categories.put("blocks", blocks);
+        // Armor
+        addShopItem(new ShopItem("Iron Armor", Material.IRON_CHESTPLATE, 12, Material.IRON_INGOT));
+        addShopItem(new ShopItem("Diamond Armor", Material.DIAMOND_CHESTPLATE, 6, Material.DIAMOND));
 
-        // Tools Category
-        ShopCategory tools = new ShopCategory("Tools", 2, new ItemStack(Material.IRON_PICKAXE));
-        tools.addItem(new ShopItem("Pickaxe", Material.IRON_PICKAXE, 10, Material.IRON_INGOT, 1, 0));
-        tools.addItem(new ShopItem("Shears", Material.SHEARS, 20, Material.IRON_INGOT, 1, 0));
-        categories.put("tools", tools);
+        // Tools
+        addShopItem(new ShopItem("Pickaxe", Material.IRON_PICKAXE, 4, Material.IRON_INGOT));
 
-        // Potions Category
-        ShopCategory potions = new ShopCategory("Potions", 3, new ItemStack(Material.POTION));
-        potions.addItem(new ShopItem("Speed Potion", Material.POTION, 1, Material.EMERALD, 1, 0));
-        potions.addItem(new ShopItem("Jump Potion", Material.POTION, 1, Material.EMERALD, 1, 0));
-        categories.put("potions", potions);
+        // Blocks
+        addShopItem(new ShopItem("Wool", Material.WHITE_WOOL, 4, Material.IRON_INGOT, 16));
     }
 
-    public boolean purchaseItem(Player player, ShopItem item) {
-        if (hasEnoughResources(player, item)) {
-            removeResources(player, item);
-            giveItem(player, item);
-            player.sendMessage("§aSuccessfully purchased " + item.getName());
-            return true;
+    private void addShopItem(ShopItem item) {
+        items.put(item.getName(), item);
+    }
+
+
+    public void spawnShopkeeper(Location location, Team team) {
+        Piglin piglin = location.getWorld().spawn(location, Piglin.class);
+        piglin.setCustomName(team.getColor() + "Shop");
+        piglin.setCustomNameVisible(true);
+        piglin.setImmuneToZombification(true);
+        piglin.setAI(false);
+        piglin.setInvulnerable(true);
+
+        shopKeepers.put(piglin.getUniqueId(), new Shop(team));
+    }
+
+    public void openShop(Player player, Piglin shopkeeper) {
+        Shop shop = shopKeepers.get(shopkeeper.getUniqueId());
+        if (shop != null) {
+            Inventory inv = createShopInventory(player);
+            player.openInventory(inv);
         }
-        player.sendMessage("§cNot enough resources!");
-        return false;
     }
 
-    private boolean hasEnoughResources(Player player, ShopItem item) {
-        return player.getInventory().contains(item.getCostType(), item.getCost());
+    private Inventory createShopInventory(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 54, "§6Shop");
+
+        for (ShopItem item : items.values()) {
+            inv.addItem(item.createDisplayItem());
+        }
+
+        return inv;
     }
 
-    private void removeResources(Player player, ShopItem item) {
-        ItemStack cost = new ItemStack(item.getCostType(), item.getCost());
-        player.getInventory().removeItem(cost);
+    public void handlePurchase(Player player, ItemStack clicked) {
+        ShopItem shopItem = getShopItemFromDisplay(clicked);
+        if (shopItem != null) {
+            ItemStack currency = new ItemStack(shopItem.getCurrency());
+            if (hasEnoughCurrency(player, shopItem.getCost(), shopItem.getCurrency())) {
+                removeCurrency(player, shopItem.getCost(), shopItem.getCurrency());
+                ItemStack reward = new ItemStack(shopItem.getItem(), shopItem.getAmount());
+                player.getInventory().addItem(reward);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                player.sendMessage(ChatColor.GREEN + "Successfully purchased " + shopItem.getName());
+            } else {
+                player.sendMessage(ChatColor.RED + "You don't have enough resources!");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            }
+        }
     }
 
-    private void giveItem(Player player, ShopItem item) {
-        ItemStack itemStack = new ItemStack(item.getMaterial(), item.getAmount());
-        player.getInventory().addItem(itemStack);
-    }
-
-    public Map<String, ShopCategory> getCategories() {
-        return categories;
-    }
-
-    public ShopItem getShopItem(@Nullable ItemStack currentItem) {
-
-        if(currentItem == null) return null;
-
-        for(ShopCategory category : categories.values()){
-            for(ShopItem item : category.getItems()){
-                if(item.getMaterial() == currentItem.getType()){
+    private ShopItem getShopItemFromDisplay(ItemStack clicked) {
+        if (clicked != null && clicked.hasItemMeta() && clicked.getItemMeta().hasDisplayName()) {
+            String name = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
+            for (ShopItem item : items.values()) {
+                if (name.equals(item.getName())) {
                     return item;
                 }
             }
         }
-
-
         return null;
+    }
+
+
+    private boolean hasEnoughCurrency(Player player, int cost, Material currency) {
+        return player.getInventory().contains(currency, cost);
+    }
+
+    private void removeCurrency(Player player, int cost, Material currency) {
+        ItemStack[] contents = player.getInventory().getContents();
+        int remaining = cost;
+
+        for (int i = 0; i < contents.length && remaining > 0; i++) {
+            ItemStack item = contents[i];
+            if (item != null && item.getType() == currency) {
+                if (item.getAmount() <= remaining) {
+                    remaining -= item.getAmount();
+                    player.getInventory().setItem(i, null);
+                } else {
+                    item.setAmount(item.getAmount() - remaining);
+                    remaining = 0;
+                }
+            }
+        }
     }
 }

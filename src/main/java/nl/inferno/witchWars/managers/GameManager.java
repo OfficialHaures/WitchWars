@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,8 +64,30 @@ public class GameManager {
             if (arena.addPlayer(player)) {
                 playerArena.put(player.getUniqueId(), arenaName);
                 player.sendMessage(ChatColor.GREEN + "You joined arena " + arenaName);
+
+                if(arena.getPlayers().size() >= arena.getMinPlayers()){
+                    startCountDown(arena);
+                }
             }
         }
+    }
+
+    private void startCountDown(Arena arena){
+        new BukkitRunnable(){
+            int countdown = 5;
+
+            @Override
+            public void run(){
+                if(arena.getPlayers().size() < arena.getMinPlayers()){
+                    cancel();
+                    arena.broadcast(ChatColor.GREEN + "Game started in " + ChatColor.YELLOW + countdown + ChatColor.GREEN + " seconds!");
+                    return;
+                } else {
+                    arena.startGame();
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0L,20L);
     }
 
     public void leaveGame(Player player) {

@@ -6,12 +6,12 @@ import nl.inferno.witchWars.game.GeneratorTier;
 import nl.inferno.witchWars.game.Team;
 import nl.inferno.witchWars.stats.PlayerStats;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.Location;
 
 
 public class MainCommand implements CommandExecutor {
@@ -49,7 +49,7 @@ public class MainCommand implements CommandExecutor {
             case "stats":
                 showStats(player);
                 break;
-                case "createarena":
+            case "createarena":
                 if (hasPermission(player, "witchwars.admin")) {
                     if (args.length < 2) {
                         player.sendMessage("§cUsage: /witchwars createarena <name>");
@@ -59,6 +59,27 @@ public class MainCommand implements CommandExecutor {
                     player.sendMessage("§aArena " + args[1] + " created!");
                 }
                 break;
+            case "forcestart":
+                if(hasPermission(player, "witchwars.admin")) {
+                    if(args.length < 2) {
+                        player.sendMessage("§cUsage: /witchwars forcestart <arena>");
+                        return true;
+                    }
+                    Arena arena = plugin.getGameManager().getArena(args[1]);
+                    if(arena != null) {
+                        if(arena.getLobbySpawn() != null && arena.getTeams().stream().allMatch(team ->
+                                team.getSpawnPoint() != null && team.getWitchSpawn() != null)) {
+                            arena.startGame();
+                            player.sendMessage("§aForce starting arena " + args[1]);
+                        } else {
+                            player.sendMessage("§cAll spawn locations must be set before starting the arena!");
+                        }
+                    } else {
+                        player.sendMessage("§cArena not found!");
+                    }
+                }
+                break;
+
             case "setspawn":
                 if (hasPermission(player, "witchwars.admin")) {
                     if (args.length < 3) {
@@ -112,13 +133,34 @@ public class MainCommand implements CommandExecutor {
                     }
                     addTeam(args[1], args[2], args[3], player);
                 }
-                break;            case "setlobby":
+                break;
+            case "setlobby":
                 if (hasPermission(player, "witchwars.admin")) {
                     if (args.length < 2) {
                         player.sendMessage("§cUsage: /witchwars setlobby <arena>");
                         return true;
                     }
                     setLobbySpawn(player, args[1]);
+                }
+                break;
+            case "shop":
+                if (hasPermission(player, "witchwars.admin")) {
+                    if (args.length < 3) {
+                        player.sendMessage("§cUsage: /witchwars shop <arena> <team>");
+                        return true;
+                    }
+                    Arena arena = plugin.getGameManager().getArena(args[1]);
+                    if (arena != null) {
+                        Team team = arena.getTeam(args[2]);
+                        if (team != null) {
+                            plugin.getShopManager().spawnShopkeeper(player.getLocation(), team);
+                            player.sendMessage("§aShop spawned for team " + team.getName());
+                        } else {
+                            player.sendMessage("§cTeam not found!");
+                        }
+                    } else {
+                        player.sendMessage("§cArena not found!");
+                    }
                 }
                 break;
             default:
@@ -164,7 +206,6 @@ public class MainCommand implements CommandExecutor {
     }
 
 
-
     private void showStats(Player player) {
         PlayerStats stats = plugin.getStatsManager().getStats(player);
 
@@ -189,6 +230,7 @@ public class MainCommand implements CommandExecutor {
 
         if (player.hasPermission("witchwars.admin")) {
             player.sendMessage("§7--- Admin Commands ---");
+            player.sendMessage("§f/witchwars forcestart <arena> §7- Force start an arena");
             player.sendMessage("§f/witchwars createarena <name> §7- Create a new arena");
             player.sendMessage("§f/witchwars setspawn <arena> <team> §7- Set team spawn");
             player.sendMessage("§f/witchwars setwitch <arena> <team> §7- Set witch spawn");
@@ -222,8 +264,30 @@ public class MainCommand implements CommandExecutor {
 
     private void setGenerator(Player player, String arena, String type) {
         Location loc = player.getLocation();
-        Material material = Material.valueOf(type.toUpperCase());
-        GeneratorTier tier = GeneratorTier.valueOf(type.toUpperCase());
+        Material material;
+        GeneratorTier tier;
+
+        switch (type.toUpperCase()) {
+            case "GOLD":
+                material = Material.GOLD_INGOT;
+                tier = GeneratorTier.TIER2;
+                break;
+            case "IRON":
+                material = Material.IRON_INGOT;
+                tier = GeneratorTier.TIER1;
+                break;
+            case "EMERALD":
+                material = Material.EMERALD;
+                tier = GeneratorTier.TIER3;
+                break;
+            case "DIAMOND":
+                material = Material.DIAMOND;
+                tier = GeneratorTier.TIER4;
+                break;
+            default:
+                player.sendMessage(ChatColor.RED + "Invalid generator type! Use: IRON, GOLD, EMERALD, DIAMOND");
+                return;
+        }
         plugin.getGeneratorManager().createGenerator(loc, material, tier);
         player.sendMessage("§aGenerator " + type + " set in arena " + arena);
     }

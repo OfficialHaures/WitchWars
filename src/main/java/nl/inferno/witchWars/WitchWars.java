@@ -38,7 +38,7 @@ public final class WitchWars extends JavaPlugin {
 
         // Register commands
         getCommand("witchwars").setExecutor(new MainCommand(this));
-        getCommand("witchwarsadmin").setExecutor(new MainCommand(this));
+
 
         // Register events
         getServer().getPluginManager().registerEvents(new GameListeners(this), this);

@@ -5,7 +5,11 @@ import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class PowerUp {
     private final String name;
@@ -90,4 +94,25 @@ public abstract class PowerUp {
     public int getDuration() { return duration; }
     public boolean isActive() { return active; }
     public Location getLocation() { return location; }
+
+    public String getDisplayName() {
+        return ChatColor.GOLD + name + ChatColor.GRAY + " Power-Up";
+    }
+
+    public ItemStack getDisplayItem() {
+        ItemStack item = new ItemStack(displayMaterial);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(getDisplayName());
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.GRAY + "Duration: " + duration + " seconds");
+            lore.add("");
+            lore.add(ChatColor.YELLOW + "Click to collect!");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
 }

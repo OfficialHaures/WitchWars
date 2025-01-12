@@ -1,12 +1,9 @@
 package nl.inferno.witchWars.game;
 
 import nl.inferno.witchWars.WitchWars;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.GameMode;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -20,6 +17,8 @@ public class Arena {
     private final WitchWars plugin;
     private BukkitTask gameTimer;
     private Map<UUID, Integer> playerKills = new HashMap<>();
+    private int minPlayers;
+    private int maxPlayers;
 
     public Arena(String name) {
         this.name = name;
@@ -52,7 +51,7 @@ public class Arena {
                 String witchSpawnStr = plugin.getConfig().getString("arenas." + name + ".teams." + teamName + ".witchspawn");
                 Location spawnPoint = parseLocation(spawnPointStr);
                 Location witchSpawn = parseLocation(witchSpawnStr);
-                teams.add(new Team(teamName, color, spawnPoint, witchSpawn));
+                teams.add(new Team(teamName, color));
             }
         }
     }
@@ -204,4 +203,76 @@ public class Arena {
     public void addKill(Player player){
         playerKills.merge(player.getUniqueId(), 1, Integer::sum);
     }
+
+    public void checkEndGame() {
+        int teamsAlive = 0;
+        Team winningTeam = null;
+
+        // Count alive teams and find potential winner
+        for (Team team : teams) {
+            if (team.isAlive()) {
+                teamsAlive++;
+                winningTeam = team;
+            }
+        }
+
+        // Handle win condition
+        if (teamsAlive == 1 && winningTeam != null) {
+            gameState = GameState.ENDING;
+
+            // Announce winner
+            broadcast(ChatColor.GOLD + "=========================");
+            broadcast(ChatColor.WHITE + "Team " + winningTeam.getColor() + winningTeam.getName() +
+                    ChatColor.WHITE + " has won the game!");
+            broadcast(ChatColor.GOLD + "=========================");
+
+            // Award winning team
+            for (UUID playerId : winningTeam.getPlayers()) {
+                Player player = Bukkit.getPlayer(playerId);
+                if (player != null) {
+                    plugin.getStatsManager().addWin(player);
+                    player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+                }
+            }
+
+            // Schedule reset
+            Bukkit.getScheduler().runTaskLater(plugin, this::resetGame, 200L);
+        }
+        // Handle draw condition
+        else if (teamsAlive == 0) {
+            broadcast(ChatColor.RED + "Game ended in a draw!");
+            resetGame();
+
+        }
+
+    }
+    private void broadcast(String message) {
+        for (UUID playerId : players) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                player.sendMessage(message);
+            }
+        }
+        }
+
+    public void setMinPlayers(int amount) {
+        this.minPlayers = amount;
+    }
+
+    public void setMaxPlayers(int amount) {
+        this.maxPlayers = amount;
+    }
+
+    public void addTeam(Team team) {
+        teams.add(team);
+    }
+
+    public Team getTeam(String teamName) {
+        return null;
+    }
+
+    public void setLobbySpawn(Location loc) {
+
+    }
 }
+

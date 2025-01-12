@@ -24,11 +24,18 @@ public class TeamManager {
     }
 
     public Team getPlayerTeam(Player player) {
-        for(Team team: teams){
-            if(team.getPlayers().contains(player.getUniqueId())){
+        for (Team team : teams.values()) {
+            if (team.getPlayers().contains(player.getUniqueId())) {
                 return team;
             }
         }
         return null;
+    }
+
+    public boolean areOnSameTeam(Player damager, Player victim) {
+        Team damagerTeam = getPlayerTeam(damager);
+        Team victimTeam = getPlayerTeam(victim);
+
+        return damagerTeam != null && damagerTeam.equals(victimTeam);
     }
 }

@@ -6,6 +6,8 @@ import nl.inferno.witchWars.game.GeneratorTier;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,15 +30,16 @@ public class GeneratorManager {
         addGeneratorType(Material.DIAMOND, 30, GeneratorTier.TIER4);
     }
 
-    private void addGeneratorType(Material material, int spawnRate, GeneratorTier generatorTier) {
-        Generator generator = new Generator(null, material, generatorTier);
-        generators.put(generator.getLocation(), generator);
+    private void addGeneratorType(Material material, int spawnRate, GeneratorTier tier) {
+        Generator generator = new Generator(null, material, tier);
+        generators.put(null, generator);
     }
 
     public void createGenerator(Location location, Material material, GeneratorTier tier) {
         Generator generator = new Generator(location, material, tier);
         generators.put(location, generator);
     }
+
 
     public void startAllGenerators() {
         generators.values().forEach(this::startGenerator);
@@ -95,5 +98,9 @@ public class GeneratorManager {
                 generator.start();
             }
         }
+    }
+
+    public boolean isGenerator(@NotNull Location location) {
+        return generators.containsKey(location);
     }
 }

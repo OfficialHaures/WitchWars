@@ -3,7 +3,10 @@ package nl.inferno.witchWars.managers;
 import nl.inferno.witchWars.WitchWars;
 import nl.inferno.witchWars.game.GameState;
 import nl.inferno.witchWars.game.Arena;
+import nl.inferno.witchWars.game.Team;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
 import java.util.HashMap;
@@ -102,5 +105,71 @@ public class GameManager {
     public Arena getPlayerArena(Player player) {
         String arenaName = playerArena.get(player.getUniqueId());
         return arenaName != null ? arenas.get(arenaName) : null;
+    }
+
+    public void handlePlayersKill(Player killer, Player player) {
+        Arena arena = getPlayerArena(killer);
+
+        if(arena != null){
+            arena.addKill(killer);
+            plugin.getStatsManager().addKill(killer);
+            killer.playSound(killer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+        }
+    }
+
+    public void handlePlayerDeath(Player player) {
+        Arena arena = getPlayerArena(player);
+
+        if(arena != null){
+            plugin.getStatsManager().addDeath(player);
+            arena.checkEndGame();
+        }
+    }
+
+    public void setTeamSpawn(String arenaName, String teamName, Location loc) {
+        String path = "arenas." + arenaName + ".teams." + teamName + ".spawn";
+        saveLocation(path, loc);
+
+        Arena arena = getArena(arenaName);
+        if (arena != null) {
+            Team team = arena.getTeam(teamName);
+            if (team != null) {
+                team.setSpawnPoint(loc);
+            }
+        }
+    }
+
+    public void setWitchSpawn(String arenaName, String teamName, Location loc) {
+        String path = "arenas." + arenaName + ".teams." + teamName + ".witch";
+        saveLocation(path, loc);
+
+        Arena arena = getArena(arenaName);
+        if (arena != null) {
+            Team team = arena.getTeam(teamName);
+            if (team != null) {
+                team.setWitchSpawn(loc);
+            }
+        }
+    }
+
+    public void setLobbySpawn(String arenaName, Location loc) {
+        String path = "arenas." + arenaName + ".lobby";
+        saveLocation(path, loc);
+
+        Arena arena = getArena(arenaName);
+        if (arena != null) {
+            arena.setLobbySpawn(loc);
+        }
+    }
+
+    private void saveLocation(String path, Location loc) {
+        String locString = loc.getWorld().getName() + "," +
+                          loc.getX() + "," +
+                          loc.getY() + "," +
+                          loc.getZ() + "," +
+                          loc.getYaw() + "," +
+                          loc.getPitch();
+        plugin.getConfig().set(path, locString);
+        plugin.saveConfig();
     }
 }

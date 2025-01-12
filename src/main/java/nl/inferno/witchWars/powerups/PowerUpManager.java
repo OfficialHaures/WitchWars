@@ -1,10 +1,17 @@
 package nl.inferno.witchWars.powerups;
 
 import nl.inferno.witchWars.WitchWars;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 public class PowerUpManager {
@@ -52,6 +59,10 @@ public class PowerUpManager {
         });
     }
 
+    private void registerPowerUp(PowerUp powerUp) {
+        powerUps.put(powerUp.getName(), powerUp);
+    }
+
     public void spawnRandomPowerUp() {
         if (spawnLocations.isEmpty()) return;
 
@@ -96,5 +107,25 @@ public class PowerUpManager {
     private PowerUp getRandomPowerUp() {
         List<PowerUp> availablePowerUps = new ArrayList<>(powerUps.values());
         return availablePowerUps.get(new Random().nextInt(availablePowerUps.size()));
+    }
+
+    public boolean isPowerUp(@NotNull Item item) {
+        ItemStack itemStack = item.getItemStack();
+        return powerUps.values().stream()
+            .anyMatch(powerUp -> powerUp.getDisplayItem().isSimilar(itemStack));
+    }
+
+    public void handlePowerUpPickup(@NotNull Item item, @NotNull Player player) {
+        ItemStack itemStack = item.getItemStack();
+
+        for (PowerUp powerUp : powerUps.values()) {
+            if (powerUp.getDisplayItem().isSimilar(itemStack)) {
+                powerUp.apply(player);
+                item.remove();
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                player.sendMessage(ChatColor.GREEN + "You collected a " + powerUp.getName() + "!");
+                break;
+            }
+        }
     }
 }

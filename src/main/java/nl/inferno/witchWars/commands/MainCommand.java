@@ -1,11 +1,18 @@
 package nl.inferno.witchWars.commands;
 
 import nl.inferno.witchWars.WitchWars;
+import nl.inferno.witchWars.game.Arena;
+import nl.inferno.witchWars.game.GeneratorTier;
+import nl.inferno.witchWars.game.Team;
+import nl.inferno.witchWars.stats.PlayerStats;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
+
 
 public class MainCommand implements CommandExecutor {
     private final WitchWars plugin;
@@ -29,7 +36,6 @@ public class MainCommand implements CommandExecutor {
         }
 
         switch (args[0].toLowerCase()) {
-            // Player commands
             case "join":
                 if (args.length < 2) {
                     player.sendMessage("§cUsage: /witchwars join <arena>");
@@ -86,7 +92,7 @@ public class MainCommand implements CommandExecutor {
                         player.sendMessage("§cUsage: /witchwars setminplayers <arena> <amount>");
                         return true;
                     }
-                    setMinPlayers(args[1], Integer.parseInt(args[2]));
+                    setMinPlayers(args[1], Integer.parseInt(args[2]), player);
                 }
                 break;
             case "setmaxplayers":
@@ -95,7 +101,7 @@ public class MainCommand implements CommandExecutor {
                         player.sendMessage("§cUsage: /witchwars setmaxplayers <arena> <amount>");
                         return true;
                     }
-                    setMaxPlayers(args[1], Integer.parseInt(args[2]));
+                    setMaxPlayers(args[1], Integer.parseInt(args[2]), player);
                 }
                 break;
             case "addteam":
@@ -104,10 +110,9 @@ public class MainCommand implements CommandExecutor {
                         player.sendMessage("§cUsage: /witchwars addteam <arena> <team> <color>");
                         return true;
                     }
-                    addTeam(args[1], args[2], args[3]);
+                    addTeam(args[1], args[2], args[3], player);
                 }
-                break;
-            case "setlobby":
+                break;            case "setlobby":
                 if (hasPermission(player, "witchwars.admin")) {
                     if (args.length < 2) {
                         player.sendMessage("§cUsage: /witchwars setlobby <arena>");
@@ -122,6 +127,57 @@ public class MainCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    private void addTeam(String arenaName, String teamName, String colorName, Player player) {
+        ChatColor color;
+        try {
+            color = ChatColor.valueOf(colorName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(ChatColor.RED + "Invalid color! Use valid ChatColor names.");
+            return;
+        }
+
+        plugin.getConfig().set("arenas." + arenaName + ".teams." + teamName + ".color", colorName);
+        plugin.saveConfig();
+
+        Arena arena = plugin.getGameManager().getArena(arenaName);
+        if (arena != null) {
+            arena.addTeam(new Team(teamName, color));
+            player.sendMessage(ChatColor.GREEN + "Team " + color + teamName + ChatColor.GREEN + " added to arena " + arenaName);
+        }
+    }
+
+
+    private void setMaxPlayers(String arenaName, int amount, Player player) {
+        plugin.getConfig().set("arenas." + arenaName + ".maxPlayers", amount);
+        plugin.saveConfig();
+        plugin.getGameManager().getArena(arenaName).setMaxPlayers(amount);
+        player.sendMessage(ChatColor.GREEN + "Maximum players for arena " + arenaName + " set to " + amount);
+    }
+
+    private void setMinPlayers(String arenaName, int amount, Player player) {
+        plugin.getConfig().set("arenas." + arenaName + ".minPlayers", amount);
+        plugin.saveConfig();
+        plugin.getGameManager().getArena(arenaName).setMinPlayers(amount);
+        player.sendMessage(ChatColor.GREEN + "Minimum players for arena " + arenaName + " set to " + amount);
+    }
+
+
+
+    private void showStats(Player player) {
+        PlayerStats stats = plugin.getStatsManager().getStats(player);
+
+        player.sendMessage(ChatColor.GOLD + "=== Your WitchWars Stats ===");
+        player.sendMessage(ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + stats.getKills());
+        player.sendMessage(ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + stats.getDeaths());
+        player.sendMessage(ChatColor.YELLOW + "K/D Ratio: " + ChatColor.WHITE + String.format("%.2f", stats.getKDRatio()));
+        player.sendMessage(ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + stats.getWins());
+        player.sendMessage(ChatColor.YELLOW + "Games Played: " + ChatColor.WHITE + stats.getGamesPlayed());
+        player.sendMessage(ChatColor.YELLOW + "Win Rate: " + ChatColor.WHITE + String.format("%.1f%%", stats.getWinRatio() * 100));
+        player.sendMessage(ChatColor.YELLOW + "Witch Kills: " + ChatColor.WHITE + stats.getWitchKills());
+        player.sendMessage(ChatColor.YELLOW + "Resources Collected: " + ChatColor.WHITE + stats.getResourcesCollected());
+        player.sendMessage(ChatColor.YELLOW + "Spells Cast: " + ChatColor.WHITE + stats.getSpellsCast());
     }
 
     private void sendHelp(Player player) {
@@ -166,9 +222,12 @@ public class MainCommand implements CommandExecutor {
 
     private void setGenerator(Player player, String arena, String type) {
         Location loc = player.getLocation();
-        plugin.getGeneratorManager().createGenerator(arena, type, loc);
+        Material material = Material.valueOf(type.toUpperCase());
+        GeneratorTier tier = GeneratorTier.valueOf(type.toUpperCase());
+        plugin.getGeneratorManager().createGenerator(loc, material, tier);
         player.sendMessage("§aGenerator " + type + " set in arena " + arena);
     }
+
 
     private void setLobbySpawn(Player player, String arena) {
         Location loc = player.getLocation();

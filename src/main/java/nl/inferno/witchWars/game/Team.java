@@ -24,8 +24,9 @@ public class Team {
     private boolean alive;
     private int level;
     private double witchHealth;
+    private @NotNull Location witchSpawn;
 
-    public Team(String name, ChatColor color, Location spawnPoint, Location witchSpawnPoint) {
+    public Team(String name, ChatColor color) {
         this.name = name;
         this.color = color;
         this.players = new HashSet<>();
@@ -109,7 +110,12 @@ public class Team {
     public @NotNull Location getSpawnPoint() {
         return spawnPoint.clone();
     }
-
+    public void setSpawnPoint(Location loc) {
+        this.spawnPoint = loc.clone();
+    }
+    public void setWitchSpawn(Location loc) {
+        this.witchSpawn = loc.clone();
+    }
 
     // Getters and setters
     public String getName() { return name; }
@@ -118,4 +124,7 @@ public class Team {
     public boolean isAlive() { return alive; }
     public int getLevel() { return level; }
     public Witch getWitch() { return teamWitch; }
+
+
+
 }
